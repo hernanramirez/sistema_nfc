@@ -1,0 +1,35 @@
+{% extends 'layout_vertical.html' %}
+
+{% block title %}Eliminar Usuario{% endblock title %}
+
+{% block page_title %}
+{% include "partials/page-title.html" with page_title='Eliminar Usuario' sub_title='Gestión' %}
+{% endblock page_title %}
+
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger text-center">
+            <div class="card-body py-5">
+                <div class="avatar-lg mx-auto mb-4">
+                    <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-1">
+                        <i class="bx bx-trash"></i>
+                    </div>
+                </div>
+                <h3 class="mb-3">¿Estás seguro?</h3>
+                <p class="text-muted mb-4 fs-15">
+                    Estás a punto de eliminar permanentemente al usuario <strong>{{ object.name|default:object.email }}</strong>.<br>
+                    Esta acción no se puede deshacer.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <a href="{% url 'users:list' %}" class="btn btn-light me-2 w-sm">Cancelar</a>
+                    <button type="submit" class="btn btn-danger w-sm">
+                        Sí, Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock page_content %}

@@ -1,0 +1,86 @@
+{% load static i18n %}
+<div class="main-nav">
+  <!-- Sidebar Logo -->
+  <div class="logo-box">
+    <a href="/" class="logo-dark">
+      <img src="{% static 'images/logo-sm.png' %}" class="logo-sm" alt="logo sm" />
+      <img src="{% static 'images/logo-dark.png' %}" class="logo-lg" alt="logo dark" />
+    </a>
+
+    <a href="/" class="logo-light">
+      <img src="{% static 'images/logo-sm.png' %}" class="logo-sm" alt="logo sm" />
+      <img src="{% static 'images/logo-light.png' %}" class="logo-lg" alt="logo light" />
+    </a>
+  </div>
+
+  <!-- Menu Toggle Button (sm-hover) -->
+  <button type="button" class="button-sm-hover" aria-label="Show Full Sidebar">
+    <iconify-icon icon="iconamoon:arrow-left-4-square-duotone" class="button-sm-hover-icon"></iconify-icon>
+  </button>
+
+  <div class="scrollbar" data-simplebar>
+    <ul class="navbar-nav" id="navbar-nav">
+      <li class="menu-title">General</li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'home' %}">
+          <span class="nav-icon">
+            <iconify-icon icon="iconamoon:home-duotone"></iconify-icon>
+          </span>
+          <span class="nav-text"> Inicio </span>
+        </a>
+      </li>
+
+      <li class="menu-title">Acceso (NFC)</li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'acceso:dashboard' %}">
+          <span class="nav-icon">
+            <iconify-icon icon="iconamoon:shield-yes-duotone"></iconify-icon>
+          </span>
+          <span class="nav-text"> Monitoreo de Acceso </span>
+        </a>
+      </li>
+
+      <li class="menu-title">Cafetería (NFC)</li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'pagos:dashboard' %}">
+          <span class="nav-icon">
+            <iconify-icon icon="iconamoon:store-duotone"></iconify-icon>
+          </span>
+          <span class="nav-text"> Punto de Venta </span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'pagos:balance' %}">
+          <span class="nav-icon">
+            <iconify-icon icon="iconamoon:wallet-duotone"></iconify-icon>
+          </span>
+          <span class="nav-text"> Mi Saldo </span>
+        </a>
+      </li>
+
+      <li class="menu-title">Configuración</li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'users:list' %}">
+          <span class="nav-icon">
+            <iconify-icon icon="iconamoon:profile-duotone"></iconify-icon>
+          </span>
+          <span class="nav-text"> Gestión de Usuarios </span>
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link" href="/admin/">
+          <span class="nav-icon">
+            <iconify-icon icon="iconamoon:settings-duotone"></iconify-icon>
+          </span>
+          <span class="nav-text"> Panel Admin </span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>

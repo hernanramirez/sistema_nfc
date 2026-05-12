@@ -19,6 +19,8 @@ urlpatterns = [
     path("users/", include("apps.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
+    path("acceso/", include("apps.acceso.urls", namespace="acceso")),
+    path("pagos/", include("apps.pagos.urls", namespace="pagos")),
     # ...
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),

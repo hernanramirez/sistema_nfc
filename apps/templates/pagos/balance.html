@@ -1,0 +1,40 @@
+{% extends 'layout_vertical.html' %}
+
+{% block title %}Mi Saldo{% endblock title %}
+
+{% block page_title %}
+{% include "partials/page-title.html" with page_title='Mi Saldo' sub_title='Cafetería NFC' %}
+{% endblock page_title %}
+
+{% block page_content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg text-center border-0 overflow-hidden">
+            <div class="card-body p-5">
+                <div class="avatar-lg mx-auto mb-4">
+                    <div class="avatar-title bg-success-subtle text-success rounded-circle fs-1">
+                        <i class="bx bx-wallet"></i>
+                    </div>
+                </div>
+                
+                <h4 class="text-muted text-uppercase fw-semibold mb-2">Saldo Disponible</h4>
+                <h1 class="display-3 text-success font-weight-bold mb-4">${{ request.user.balance }}</h1>
+                
+                <div class="d-flex justify-content-center align-items-center mb-4">
+                    <span class="badge bg-light text-dark fs-14 py-2 px-3 border">
+                        <i class="bx bx-rfid text-primary me-1"></i> 
+                        RFID: {{ request.user.rfid_uid|default:"No asignado" }}
+                    </span>
+                </div>
+                
+                <button class="btn btn-primary w-100 btn-lg rounded-pill" onclick="alert('Funcionalidad de recarga en línea en construcción. Por favor diríjase a caja.')">
+                    <i class="bx bx-plus-circle me-1"></i> Recargar Saldo
+                </button>
+            </div>
+            <div class="card-footer bg-light border-top-0 py-3">
+                <p class="mb-0 text-muted"><small>El saldo se actualiza en tiempo real al realizar compras.</small></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock page_content %}

@@ -1,6 +1,7 @@
 from allauth.account.forms import SignupForm
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django.contrib.auth import forms as admin_forms
+from django import forms
 from django.forms import EmailField
 from django.utils.translation import gettext_lazy as _
 
@@ -42,3 +43,15 @@ class UserSocialSignupForm(SocialSignupForm):
     Default fields will be added automatically.
     See UserSignupForm otherwise.
     """
+
+
+class UserAdminForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = [
+            "email", "name", "role", "rfid_uid", 
+            "grade", "section", "balance", "is_active"
+        ]
+        widgets = {
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }

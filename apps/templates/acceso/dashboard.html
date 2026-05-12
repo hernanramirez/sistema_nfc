@@ -1,0 +1,116 @@
+{% extends 'layout_vertical.html' %}
+{% load static %}
+
+{% block title %}Monitoreo de Acceso{% endblock title %}
+
+{% block page_title %}
+{% include "partials/page-title.html" with page_title='Monitoreo de Acceso' sub_title='Control NFC' %}
+{% endblock page_title %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex align-items-center">
+                <iconify-icon icon="iconamoon:shield-yes-duotone" class="fs-4 me-2"></iconify-icon>
+                <h5 class="card-title mb-0 text-white">Registros en Tiempo Real</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0" id="logs-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha y Hora</th>
+                                <th>Usuario</th>
+                                <th>Grado</th>
+                                <th>Sección</th>
+                                <th>RFID UID</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                <td>{% if log.user %}{{ log.user.name|default:log.user.email }}{% else %}Desconocido{% endif %}</td>
+                                <td>{{ log.user.grade|default:"-" }}</td>
+                                <td>{{ log.user.section|default:"-" }}</td>
+                                <td>{{ log.rfid }}</td>
+                                <td>
+                                    {% if log.status == 'autorizado' %}
+                                        <span class="badge bg-success">Autorizado</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">No Autorizado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr id="no-logs-row">
+                                <td colspan="6" class="text-center py-4 text-muted">No hay registros de acceso aún. Esperando lecturas...</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock page_content %}
+
+{% block extra_javascript %}
+{{ block.super }}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = `${socketProtocol}://${window.location.host}/ws/acceso/`;
+        const socket = new WebSocket(wsUrl);
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === "access_log") {
+                const log = data.data;
+                const tbody = document.querySelector("#logs-table tbody");
+                
+                const noLogsRow = document.getElementById("no-logs-row");
+                if (noLogsRow) noLogsRow.remove();
+
+                const tr = document.createElement("tr");
+                tr.className = "fade-in";
+                
+                const statusBadge = log.status === 'autorizado' 
+                    ? '<span class="badge bg-success">Autorizado</span>'
+                    : '<span class="badge bg-danger">No Autorizado</span>';
+
+                tr.innerHTML = `
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.nombre}</td>
+                    <td>${log.anno_grado || '-'}</td>
+                    <td>${log.seccion || '-'}</td>
+                    <td>${log.rfid}</td>
+                    <td>${statusBadge}</td>
+                `;
+
+                tbody.insertBefore(tr, tbody.firstChild);
+                
+                if (tbody.children.length > 50) {
+                    tbody.lastElementChild.remove();
+                }
+            }
+        };
+
+        socket.onclose = function(e) {
+            console.error('WebSocket closed unexpectedly');
+        };
+    });
+</script>
+<style>
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { background-color: rgba(var(--bs-primary-rgb), 0.2); }
+        to { background-color: transparent; }
+    }
+</style>
+{% endblock extra_javascript %}

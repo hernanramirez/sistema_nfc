@@ -1,0 +1,162 @@
+{% extends 'layout_vertical.html' %}
+{% load static %}
+
+{% block title %}Panel de Cafetería{% endblock title %}
+
+{% block page_title %}
+{% include "partials/page-title.html" with page_title='Punto de Venta' sub_title='Cafetería NFC' %}
+{% endblock page_title %}
+
+{% block page_content %}
+<div class="row">
+    <!-- Card Monto a Cobrar -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white d-flex align-items-center">
+                <iconify-icon icon="iconamoon:shopping-bag-duotone" class="fs-4 me-2"></iconify-icon>
+                <h5 class="card-title mb-0 text-white">Monto a Cobrar</h5>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                <form id="amount-form">
+                    <label class="form-label text-muted">Ingrese el monto de la compra</label>
+                    <div class="input-group input-group-lg mb-3">
+                        <span class="input-group-text bg-light border-end-0 fs-3 text-success">$</span>
+                        <input type="number" class="form-control border-start-0 fs-3 fw-bold text-success" id="monto" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-success btn-lg" type="button" id="set-monto-btn">
+                            <i class="bx bx-check-circle me-1"></i> Fijar Monto
+                        </button>
+                    </div>
+                </form>
+                <div id="monto-status" class="alert alert-success mt-3 d-none mb-0">
+                    <i class="bx bx-broadcast me-1"></i> Monto fijado. Acerque la tarjeta al lector...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Transacciones -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-secondary text-white d-flex align-items-center">
+                <iconify-icon icon="iconamoon:history-duotone" class="fs-4 me-2"></iconify-icon>
+                <h5 class="card-title mb-0 text-white">Transacciones Recientes</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-striped mb-0" id="payments-table">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Hora</th>
+                                <th>Usuario</th>
+                                <th>RFID UID</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp|date:"H:i:s" }}</td>
+                                <td>{% if log.user %}{{ log.user.name|default:log.user.email }}{% else %}Desconocido{% endif %}</td>
+                                <td>{{ log.rfid }}</td>
+                                <td class="fw-bold text-success">${{ log.amount }}</td>
+                                <td>
+                                    {% if log.status == 'completado' %}
+                                        <span class="badge bg-success">Completado</span>
+                                    {% elif log.status == 'saldo insuficiente' %}
+                                        <span class="badge bg-warning text-dark">Saldo Insuficiente</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Error</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr id="no-logs-row">
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bx bx-receipt fs-1 d-block mb-2 text-light"></i>
+                                    No hay transacciones recientes.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock page_content %}
+
+{% block extra_javascript %}
+{{ block.super }}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = `${socketProtocol}://${window.location.host}/ws/pagos/`;
+        const socket = new WebSocket(wsUrl);
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === "payment_log") {
+                const log = data.data;
+                const tbody = document.querySelector("#payments-table tbody");
+                
+                const noLogsRow = document.getElementById("no-logs-row");
+                if (noLogsRow) noLogsRow.remove();
+
+                const tr = document.createElement("tr");
+                tr.className = "fade-in";
+                
+                let statusBadge = '';
+                if (log.status === 'completado') {
+                    statusBadge = '<span class="badge bg-success">Completado</span>';
+                } else if (log.status === 'saldo insuficiente') {
+                    statusBadge = '<span class="badge bg-warning text-dark">Saldo Insuficiente</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-danger">Error</span>';
+                }
+
+                // Format time only
+                const date = new Date(log.timestamp);
+                const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+
+                tr.innerHTML = `
+                    <td>${timeStr}</td>
+                    <td>${log.nombre}</td>
+                    <td>${log.rfid}</td>
+                    <td class="fw-bold text-success">$${log.amount}</td>
+                    <td>${statusBadge}</td>
+                `;
+
+                tbody.insertBefore(tr, tbody.firstChild);
+                
+                if (tbody.children.length > 50) {
+                    tbody.lastElementChild.remove();
+                }
+            }
+        };
+
+        document.getElementById("set-monto-btn").addEventListener("click", function() {
+            const amount = document.getElementById("monto").value;
+            if (amount) {
+                document.getElementById("monto-status").classList.remove("d-none");
+                // MOCKUP: Show success message for 5 seconds
+                setTimeout(() => {
+                    document.getElementById("monto-status").classList.add("d-none");
+                }, 5000);
+            }
+        });
+    });
+</script>
+<style>
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { background-color: rgba(var(--bs-success-rgb), 0.2); }
+        to { background-color: transparent; }
+    }
+</style>
+{% endblock extra_javascript %}

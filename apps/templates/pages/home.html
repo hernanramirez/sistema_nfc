@@ -1,3 +1,30 @@
-{% extends "base.html" %}
+{% extends 'layout_vertical.html' %}
 
+{% load static i18n %}
 
+{% block title %}Inicio{% endblock title %}
+
+{% block page_title %}
+{% include "partials/page-title.html" with page_title='Inicio' sub_title='Sistema NFC' %}
+{% endblock page_title %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-primary-subtle border-primary border text-primary-emphasis mb-4">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <iconify-icon icon="iconamoon:shield-yes-duotone" class="fs-1 text-primary"></iconify-icon>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h4 class="mb-1">Bienvenido al Sistema de Control NFC</h4>
+                    <p class="mb-0">Utiliza el menú lateral para acceder a los paneles de Control de Acceso y Punto de Venta de la Cafetería.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock page_content %}
+
+{% block extra_javascript %}
+{% endblock extra_javascript %}

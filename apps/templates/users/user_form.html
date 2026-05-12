@@ -1,31 +1,33 @@
-{% extends "base.html" %}
-
+{% extends 'layout_vertical.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}
+{% block title %}Usuario{% endblock title %}
 
+{% block page_title %}
+{% include "partials/page-title.html" with page_title='Usuario' sub_title='Gestión' %}
+{% endblock page_title %}
 
-  {{ user.name }}
-
-
-{% endblock title %}
-{% block content %}
-  <h1>
-  
-  
-    {{ user.name }}
-  
-  
-</h1>
-<form class="form-horizontal"
-      method="post"
-      action="{% url 'users:update' %}">
-  {% csrf_token %}
-  {{ form|crispy }}
-  <div class="control-group">
-    <div class="controls">
-      <button type="submit" class="btn btn-primary">Update</button>
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0 text-white">{% if object %}Editar Usuario{% else %}Crear Usuario{% endif %}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="mt-4 text-end">
+                        <a href="{% url 'users:list' %}" class="btn btn-light me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bx bx-save me-1"></i>Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
-</form>
-{% endblock content %}
+</div>
+{% endblock page_content %}

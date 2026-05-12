@@ -1,0 +1,125 @@
+{% extends 'layout_vertical.html' %}
+
+{% load static i18n %}
+
+{% block title %}Lista de Usuarios{% endblock title %}
+
+{% block page_title %}
+{% include "partials/page-title.html" with page_title='Usuarios' sub_title='Gestión' %}
+{% endblock page_title %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                    </div>
+                    <div>
+                        <div class="d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
+                            <a href="{% url 'users:create' %}" class="btn btn-primary">
+                                <i class="bx bx-plus-circle me-1"></i>Añadir Usuario
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card overflow-hidden">
+            <div class="table-responsive table-centered">
+                <table class="table text-nowrap mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>RFID UID</th>
+                            <th>Saldo</th>
+                            <th>Grado / Sección</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in user_list %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="avatar-xs rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                        {{ user.name|default:user.email|make_list|first|upper }}
+                                    </span>
+                                    <a href="#!">{{ user.name|default:user.email }}</a>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td><span class="badge bg-secondary">{{ user.get_role_display }}</span></td>
+                            <td>{{ user.rfid_uid|default:"-" }}</td>
+                            <td>${{ user.balance }}</td>
+                            <td>{{ user.grade|default:"-" }} / {{ user.section|default:"-" }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Bloqueado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'users:update_admin' user.pk %}" class="btn btn-sm btn-soft-secondary me-1" title="Editar">
+                                    <i class="bx bx-edit fs-16"></i>
+                                </a>
+                                {% if user != request.user %}
+                                <a href="{% url 'users:toggle_active' user.pk %}" class="btn btn-sm {% if user.is_active %}btn-soft-warning{% else %}btn-soft-success{% endif %} me-1" title="{% if user.is_active %}Bloquear{% else %}Desbloquear{% endif %}">
+                                    <i class="bx {% if user.is_active %}bx-block{% else %}bx-check-circle{% endif %} fs-16"></i>
+                                </a>
+                                <a href="{% url 'users:delete' user.pk %}" class="btn btn-sm btn-soft-danger" title="Eliminar">
+                                    <i class="bx bx-trash fs-16"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No hay usuarios registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if is_paginated %}
+            <div class="align-items-center justify-content-between row g-0 text-center text-sm-start p-3 border-top">
+                <div class="col-sm">
+                    <div class="text-muted">
+                        Página <span class="fw-semibold">{{ page_obj.number }}</span> de <span class="fw-semibold">{{ page_obj.paginator.num_pages }}</span>
+                    </div>
+                </div>
+                <div class="col-sm-auto mt-3 mt-sm-0">
+                    <ul class="pagination pagination-rounded m-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.previous_page_number }}" class="page-link"><i class="bx bx-left-arrow-alt"></i></a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item active">
+                            <a href="#" class="page-link">{{ page_obj.number }}</a>
+                        </li>
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.next_page_number }}" class="page-link"><i class="bx bx-right-arrow-alt"></i></a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock page_content %}
