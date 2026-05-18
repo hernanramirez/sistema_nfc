@@ -140,9 +140,12 @@
 
         document.getElementById("set-monto-btn").addEventListener("click", function() {
             const amount = document.getElementById("monto").value;
-            if (amount) {
+            if (amount && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    "action": "set_amount",
+                    "amount": amount
+                }));
                 document.getElementById("monto-status").classList.remove("d-none");
-                // MOCKUP: Show success message for 5 seconds
                 setTimeout(() => {
                     document.getElementById("monto-status").classList.add("d-none");
                 }, 5000);

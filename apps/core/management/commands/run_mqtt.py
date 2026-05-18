@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 import paho.mqtt.client as mqtt
 from decimal import Decimal
 from asgiref.sync import async_to_sync
@@ -19,7 +20,8 @@ class Command(BaseCommand):
     help = "Run the MQTT client to listen to ESP32 events"
 
     def handle(self, *args, **options):
-        client = mqtt.Client(client_id=settings.MQTT_CLIENT_ID)
+        unique_client_id = f"{settings.MQTT_CLIENT_ID}_{uuid.uuid4().hex[:8]}"
+        client = mqtt.Client(client_id=unique_client_id)
 
         if settings.MQTT_USERNAME and settings.MQTT_PASSWORD:
             client.username_pw_set(settings.MQTT_USERNAME, settings.MQTT_PASSWORD)
@@ -44,8 +46,8 @@ class Command(BaseCommand):
         if rc == 0:
             self.stdout.write(self.style.SUCCESS("Connected successfully."))
             client.subscribe("esp32door/rfid/uid")
-            client.subscribe("esp32cafe/rfid/uid")
-            client.subscribe("esp32cafe/amount/set")
+            client.subscribe("esp32cantina/pago/uid")
+            client.subscribe("esp32cantina/pago/monto")
             self.cafe_amount = Decimal("0.00")
         else:
             self.stdout.write(self.style.ERROR(f"Connection failed with code {rc}"))
@@ -57,13 +59,13 @@ class Command(BaseCommand):
 
         if topic == "esp32door/rfid/uid":
             self.process_access(client, payload)
-        elif topic == "esp32cafe/amount/set":
+        elif topic == "esp32cantina/pago/monto":
             try:
                 self.cafe_amount = Decimal(payload)
                 self.stdout.write(self.style.SUCCESS(f"Cafeteria amount set to {self.cafe_amount}"))
             except ValueError:
                 pass
-        elif topic == "esp32cafe/rfid/uid":
+        elif topic == "esp32cantina/pago/uid":
             self.process_payment(client, payload)
 
     def process_access(self, client, rfid):
@@ -102,26 +104,26 @@ class Command(BaseCommand):
 
     def process_payment(self, client, rfid):
         if getattr(self, "cafe_amount", Decimal("0.00")) <= Decimal("0.00"):
-            client.publish("esp32cafe/rfid/auth", "error-monto")
+            client.publish("esp32cantina/pago/validacion", "no aprobado")
             return
 
         try:
             user = User.objects.get(rfid_uid=rfid)
             if not user.is_active:
                 status = PaymentLog.Status.ERROR
-                client.publish("esp32cafe/rfid/auth", "error-usuario")
+                client.publish("esp32cantina/pago/validacion", "no aprobado")
             elif user.balance >= self.cafe_amount:
                 user.balance -= self.cafe_amount
                 user.save()
                 status = PaymentLog.Status.COMPLETADO
-                client.publish("esp32cafe/rfid/auth", "pago_exitoso")
+                client.publish("esp32cantina/pago/validacion", "aprobado")
             else:
                 status = PaymentLog.Status.SALDO_INSUFICIENTE
-                client.publish("esp32cafe/rfid/auth", "saldo_insuficiente")
+                client.publish("esp32cantina/pago/validacion", "no aprobado")
         except User.DoesNotExist:
             user = None
             status = PaymentLog.Status.ERROR
-            client.publish("esp32cafe/rfid/auth", "error-usuario")
+            client.publish("esp32cantina/pago/validacion", "no aprobado")
 
         # Save to DB
         log = PaymentLog.objects.create(rfid=rfid, status=status, amount=self.cafe_amount, user=user)
